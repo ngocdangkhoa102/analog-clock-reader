@@ -78,7 +78,7 @@ def filter(mtx):
 			output = np.delete(output,[index],0)
 	return output
 
-src = cv.imread("images/clock20.png")
+src = cv.imread("images/anh2.png")
 gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
 # imbin = cv.imread("imbin.png",0)
 lo_val = 61
@@ -119,12 +119,12 @@ tmp = clockim[y0:y1,x0:x1]
 edges = cv.Canny(tmp,40,200,apertureSize = 3)
 cv.imshow("edges",edges)
 lines = cv.HoughLinesP(edges,1,np.pi/180,23,minLineLength = 22,maxLineGap = 7)
-print(lines.shape)
+#print(lines.shape)
 
 tst = np.zeros(edges.shape,dtype = np.uint8)
 for line in lines:
 	x0,y0,x1,y1 = line[0]
-	print(x0,y0,x1,y1)
+#	print(x0,y0,x1,y1)
 	cv.line(tst,(x0,y0),(x1,y1),255,1)
 cv.imshow("clock with line",tst)
 cv.waitKey(0)
@@ -135,9 +135,9 @@ tst = np.zeros(edges.shape,dtype = np.uint8)
 ox,oy = (int(tst.shape[1]/2),int(tst.shape[0]/2))
 min_hand = (0,0)
 ab_mtx = getab(lines)
-print(ab_mtx)
+#print(ab_mtx)
 ab_mtx = filter(ab_mtx)
-print(ab_mtx)
+#print(ab_mtx)
 for index in range(0,2):
 	x0,y0,x1,y1 = lines[int(ab_mtx[index,2])][0]
 	x1,y1 = getxy(x0,y0,x1,y1,ox,oy)
