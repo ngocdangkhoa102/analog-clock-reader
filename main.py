@@ -1,6 +1,8 @@
 import cv2 as cv
 import numpy as np 
 import math
+import time
+import urllib.request
 
 def norm2(x0,y0,x1,y1):
 	return math.sqrt((x0-x1)**2+(y0-y1)**2)
@@ -61,10 +63,25 @@ def getab(lines):
 		index = index + 1
 	return output
 
+def check_line(lines,ox,oy):
+	index = 0
+	output = lines[:]
+	end_time = time.time() + 3
+	while time.time() < end_time:
+		if index >= output.shape[0]:
+			break
+		x0,y0,x1,y1 = output[index][0]
+		if norm2(x0,y0,ox,oy) > 25 and norm2(x1,y1,ox,oy) > 25:
+			output = np.delete(output,[index],0)
+			index = index - 1
+		index = index + 1
+	return output
+
 def filter(mtx):
 	output = mtx[:]
 	index = 0
-	while True:
+	end_time = time.time() + 3
+	while time.time() < end_time:
 		if output.shape[0] == 2:
 	 		break
 		c = 1
@@ -78,16 +95,17 @@ def filter(mtx):
 			output = np.delete(output,[index],0)
 	return output
 
-src = cv.imread("images/anh2.png")
+src = cv.imread("images/clock2.png")
+# src = cv.imread("test-fail/clock15.png")
+
 gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
-# imbin = cv.imread("imbin.png",0)
 lo_val = 61
 hi_val = 255
 imbin = cv.adaptiveThreshold(gray, hi_val, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 61, 12)
 edges = cv.Canny(imbin,220,250,apertureSize = 3)
 cv.imshow("Edge",edges)
 cv.waitKey(0)
-circles = cv.HoughCircles(edges,cv.HOUGH_GRADIENT,1.2,2,param1=100,param2=42,minRadius=0,maxRadius=100)
+circles = cv.HoughCircles(edges,cv.HOUGH_GRADIENT,1.2,2,param1=50,param2=42,minRadius=0,maxRadius=100)
 circles = np.round(circles[0,:]).astype("int")
 
 for circle in circles:
@@ -100,7 +118,6 @@ cv.waitKey(0)
 
 clockim = imbin[y-r:y+r,x-r:x+r]
 clockim = 255 - clockim
-cv.waitKey(0)
 
 kernel1 = np.ones((4,4),dtype = np.uint8)
 kernel2 = np.ones((2,2),dtype = np.uint8)
@@ -112,56 +129,70 @@ for index in range(0,1):
 cv.imshow("clock-only",clockim)
 cv.waitKey(0)
 
-offset = 52
+offset = 55
 clock_pos = (int(clockim.shape[0]/2) - offset,int(clockim.shape[0]/2) + offset, int(clockim.shape[1]/2) - offset,int(clockim.shape[1]/2) + offset)
 (y0,y1,x0,x1) = clock_pos
 tmp = clockim[y0:y1,x0:x1]
+cv.imshow("Tmp",tmp)
 edges = cv.Canny(tmp,40,200,apertureSize = 3)
 cv.imshow("edges",edges)
-lines = cv.HoughLinesP(edges,1,np.pi/180,23,minLineLength = 22,maxLineGap = 7)
-#print(lines.shape)
+lines = cv.HoughLinesP(edges,1,np.pi/180,25,minLineLength = 20,maxLineGap = 7)
+# print(lines.shape[0])
+# print('stage 1')
+
+# tst = np.zeros(edges.shape,dtype = np.uint8)
+# print(tst.shape)
+# ox,oy = (int(tst.shape[1]/2),int(tst.shape[0]/2))
+# print(ox,oy)
+# for line in lines:
+# 	x0,y0,x1,y1 = line[0]
+# 	# print(x0,y0,x1,y1)
+# 	cv.line(tst,(x0,y0),(x1,y1),255,1)
+# 	cv.imshow("clock with line",tst)
+# 	cv.waitKey(0)
 
 tst = np.zeros(edges.shape,dtype = np.uint8)
-for line in lines:
-	x0,y0,x1,y1 = line[0]
-#	print(x0,y0,x1,y1)
-	cv.line(tst,(x0,y0),(x1,y1),255,1)
-cv.imshow("clock with line",tst)
-cv.waitKey(0)
+ox,oy = (int(tst.shape[1]/2),int(tst.shape[0]/2))
 
-ox,oy = (int(tst.shape[1]/2),int(tst.shape[0]/2))
-min_hand = (0,0)
-tst = np.zeros(edges.shape,dtype = np.uint8)
-ox,oy = (int(tst.shape[1]/2),int(tst.shape[0]/2))
-min_hand = (0,0)
-ab_mtx = getab(lines)
-#print(ab_mtx)
-ab_mtx = filter(ab_mtx)
-#print(ab_mtx)
-for index in range(0,2):
-	x0,y0,x1,y1 = lines[int(ab_mtx[index,2])][0]
-	x1,y1 = getxy(x0,y0,x1,y1,ox,oy)
-	X1,Y1 = change_axis(ox,oy,x1,y1)
-	if norm2(0,0,X1,Y1) > norm2(0,0,min_hand[0],min_hand[1]):
-		hour_hand = min_hand
-		min_hand = X1,Y1
+if lines is not None:
+	lines = check_line(lines,ox,oy)
+	min_hand = (0,0)
+	ab_mtx = getab(lines)
+	ab_mtx = filter(ab_mtx)
+
+	if ab_mtx.shape[0] == 2:
+		for index in range(0,2):
+			x0,y0,x1,y1 = lines[int(ab_mtx[index,2])][0]
+			x1,y1 = getxy(x0,y0,x1,y1,ox,oy)
+			X1,Y1 = change_axis(ox,oy,x1,y1)
+			if norm2(0,0,X1,Y1) > norm2(0,0,min_hand[0],min_hand[1]):
+				hour_hand = min_hand
+				min_hand = X1,Y1
+			else:
+				hour_hand = X1,Y1
+			cv.line(tst,(ox,oy),(x1,y1),255,1)
+			# cv.rectangle(tst,(x1,y1),(x1+5,y1+5),255,1)
+		cv.imshow("clock with line",tst)
+		# cv.waitKey(0)
+
+	# print(min_hand)
+	# print(hour_hand)
+
+		hours, minutes = get_value(hour_hand,min_hand)
+		# cv.waitKey(0)
+
+		from google_speech import Speech 
+		text = "It's " + str(hours) + ":" + str(minutes) + "..."
+		lang = "en"
 	else:
-		hour_hand = X1,Y1
-	cv.line(tst,(ox,oy),(x1,y1),255,1)
-	# cv.rectangle(tst,(x1,y1),(x1+5,y1+5),255,1)
-	cv.imshow("clock with line",tst)
-	# cv.waitKey(0)
-
-# print(min_hand)
-# print(hour_hand)
-
-hours, minutes = get_value(hour_hand,min_hand)
-print(str(hours) + ":" + str(minutes))
-# cv.waitKey(0)
-
-from google_speech import Speech 
-text = "It's " + str(hours) + ":" + str(minutes) + "..."
-lang = "en"
+		from google_speech import Speech 
+		text = "Can't see any clock"
+		lang = "en"
+else:
+	from google_speech import Speech 
+	text = "Can't see any clock"
+	lang = "en"
+print(text)
 speech = Speech(text,lang)
 speech.play()
 
