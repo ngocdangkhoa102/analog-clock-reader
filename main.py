@@ -95,16 +95,21 @@ def filter(mtx):
 			output = np.delete(output,[index],0)
 	return output
 
-src = cv.imread("images/clock2.png")
-# src = cv.imread("test-fail/clock15.png")
+src = cv.imread("images/anh3.png")
+# src = cv.imread("test-fail/clock12.png")
+cv.imshow("Src",src)
+cv.waitKey(0)
 
 gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
 lo_val = 61
 hi_val = 255
 imbin = cv.adaptiveThreshold(gray, hi_val, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 61, 12)
+cv.imshow("Threshold",imbin)
+cv.waitKey(0)
 edges = cv.Canny(imbin,220,250,apertureSize = 3)
 cv.imshow("Edge",edges)
 cv.waitKey(0)
+
 circles = cv.HoughCircles(edges,cv.HOUGH_GRADIENT,1.2,2,param1=50,param2=42,minRadius=0,maxRadius=100)
 circles = np.round(circles[0,:]).astype("int")
 
