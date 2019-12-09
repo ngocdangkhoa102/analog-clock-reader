@@ -120,10 +120,10 @@ while True:
 	# cv.imshow("Edge",edges)
 	# cv.waitKey(0)
 	circles = cv.HoughCircles(edges,cv.HOUGH_GRADIENT,1.2,2,param1=50,param2=42,minRadius=0,maxRadius=100)
-	circles = np.round(circles[0,:]).astype("int")
 	if circles is None:
 		text = "Can't see any clock"
 		continue
+	circles = np.round(circles[0,:]).astype("int")
 
 	for circle in circles:
 		(x,y,r) = circle
@@ -206,7 +206,7 @@ while True:
 
 
 	print(text)
-	from google_speech import Speech 
+	# from google_speech import Speech 
 	# lang = "en"
 	# speech = Speech(text,lang)
 	# speech.play()
