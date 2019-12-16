@@ -95,12 +95,14 @@ def filter(mtx):
 			output = np.delete(output,[index],0)
 	return output
 
-src = cv.imread("images/anh3.png")
-# src = cv.imread("test-fail/clock12.png")
+src = cv.imread("images/anh (5).png")
+# src = cv.imread("test-fail/anh4.png")
 cv.imshow("Src",src)
 cv.waitKey(0)
 
 gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
+gray = cv.GaussianBlur(gray,(5,5),cv.BORDER_DEFAULT)
+
 lo_val = 61
 hi_val = 255
 imbin = cv.adaptiveThreshold(gray, hi_val, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 61, 12)
@@ -110,7 +112,7 @@ edges = cv.Canny(imbin,220,250,apertureSize = 3)
 cv.imshow("Edge",edges)
 cv.waitKey(0)
 
-circles = cv.HoughCircles(edges,cv.HOUGH_GRADIENT,1.2,2,param1=50,param2=42,minRadius=0,maxRadius=100)
+circles = cv.HoughCircles(edges,cv.HOUGH_GRADIENT,1.2,2,param1=50,param2=46,minRadius=0,maxRadius=100)
 circles = np.round(circles[0,:]).astype("int")
 
 for circle in circles:
@@ -124,9 +126,9 @@ cv.waitKey(0)
 clockim = imbin[y-r:y+r,x-r:x+r]
 clockim = 255 - clockim
 
-kernel1 = np.ones((4,4),dtype = np.uint8)
+kernel1 = np.ones((1,1),dtype = np.uint8)
 kernel2 = np.ones((2,2),dtype = np.uint8)
-kernel3 = np.ones((1,1),dtype = np.uint8)
+kernel3 = np.ones((3,3),dtype = np.uint8)
 for index in range(0,2):
 	clockim = cv.erode(clockim,kernel2)
 for index in range(0,1):
@@ -141,7 +143,7 @@ tmp = clockim[y0:y1,x0:x1]
 cv.imshow("Tmp",tmp)
 edges = cv.Canny(tmp,40,200,apertureSize = 3)
 cv.imshow("edges",edges)
-lines = cv.HoughLinesP(edges,1,np.pi/180,25,minLineLength = 20,maxLineGap = 7)
+lines = cv.HoughLinesP(edges,1,np.pi/180,22,minLineLength = 25,maxLineGap = 7)
 # print(lines.shape[0])
 # print('stage 1')
 

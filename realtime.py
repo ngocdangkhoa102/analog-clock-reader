@@ -113,13 +113,14 @@ while True:
 	if k == 27:
 		break
 	gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
+	gray = cv.GaussianBlur(gray,(3,3),cv.BORDER_DEFAULT)
 	lo_val = 61
 	hi_val = 255
 	imbin = cv.adaptiveThreshold(gray, hi_val, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 61, 12)
 	edges = cv.Canny(imbin,220,250,apertureSize = 3)
 	# cv.imshow("Edge",edges)
 	# cv.waitKey(0)
-	circles = cv.HoughCircles(edges,cv.HOUGH_GRADIENT,1.2,2,param1=50,param2=42,minRadius=0,maxRadius=100)
+	circles = cv.HoughCircles(edges,cv.HOUGH_GRADIENT,1.2,2,param1=50,param2=42,minRadius=5,maxRadius=100)
 	if circles is None:
 		text = "Can't see any clock"
 		continue
